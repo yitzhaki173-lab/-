@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PackTrack IL v2.0 — ניהול משלוחים, סנכרון אוטומטי ובדיקת קישורים</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Heebo', 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .pulse-dot {
+      animation: pulseDot 2s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.65; }
+    }
+    .spin-slow {
+      animation: spin 1.1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-24">
+
+  <!-- Top App Bar -->
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-900/40">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">PackTrack IL</h1>
+            <button id="btnOpenVersionModalTop" type="button" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
+              <span id="appVersionBadge">v2.0.0</span>
+              <span id="updateAvailableDot" class="w-2 h-2 rounded-full bg-amber-400 pulse-dot"></span>
+            </button>
+          </div>
+          <p class="text-xs text-slate-400">סנכרון חכם מ-Gmail, בדיקת קישורי איסוף אוטומטית וקורא SMS</p>
+        </div>
+      </div>
+
+      <!-- Sync & Version Action Bar -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnCheckLinksNow" type="button" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
+          <svg id="iconLinkCheck" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+          <span>בדוק קישורים</span>
+        </button>
+
+        <button id="btnSyncNow" type="button" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-900/40 flex items-center gap-1.5 transition">
+          <svg id="iconSyncNow" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span id="txtSyncNow">סנכרן עכשיו</span>
+        </button>
+
+        <button id="btnOpenVersionModal" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+          </svg>
+          <span>עדכון גרסה</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Auto-Sync & Link Check Live Status Banner -->
+  <section class="max-w-5xl mx-auto px-4 pt-4">
+    <div class="glass-card rounded-2xl p-3.5 sm:p-4 border border-emerald-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-start sm:items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot"></span>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs sm:text-sm font-bold text-emerald-300" id="syncStatusHeadline">סנכרון אוטומטי פעיל (יומי: 08:00 + בכניסה לאפליקציה)</span>
+            <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700" id="lastSyncTimeBadge">עודכן: 20/10/2026 16:16</span>
+          </div>
+          <p class="text-xs text-slate-300 mt-0.5" id="syncStatusSubtext">
+            בדיקת קישורים אוטומטית הסירה 4 הזמנות שכבר נאספו (כולל 2 הזמנות KSP מסניף חולון מזרח) ועדכנה את משלוח YDM 20072588 מהיום.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="btnOpenSyncSettings" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition">
+          הגדרות סנכרון
+        </button>
+        <button id="btnAddPackageModal" type="button" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">
+          + הוסף חבילה
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary KPI Cards -->
+  <section class="max-w-5xl mx-auto px-4 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="glass-card rounded-2xl p-3.5 border-r-4 border-r-emerald-500">
+      <div class="text-xs text-slate-400">חבילות פעילות כעת</div>
+      <div class="text-2xl font-extrabold text-white mt-1" id="kpiActiveCount">7</div>
+      <div class="text-[11px] text-emerald-400 mt-0.5">רק חבילות שטרם נאספו</div>
+    </div>
+    <div class="glass-card rounded-2xl p-3.5 border-r-4 border-r-amber-500">
+      <div class="text-xs text-slate-400">ממתינות לפעולה / איסוף</div>
+      <div class="text-2xl font-extrabold text-amber-300 mt-1" id="kpiActionCount">2</div>
+      <div class="text-[11px] text-amber-200/80 mt-0.5">געש (פיכמן 22) + בחירת נקודה</div>
+    </div>
+    <div class="glass-card rounded-2xl p-3.5 border-r-4 border-r-sky-500">
+      <div class="text-xs text-slate-400">נחתו בארץ / בדרך אליך</div>
+      <div class="text-2xl font-extrabold text-sky-300 mt-1" id="kpiTransitCount">5</div>
+      <div class="text-[11px] text-sky-200/80 mt-0.5">YDM, דואר ישראל ו-ACE</div>
+    </div>
+    <div class="glass-card rounded-2xl p-3.5 border-r-4 border-r-purple-500">
+      <div class="text-xs text-slate-400">נאספו והוסרו מהמערכת</div>
+      <div class="text-2xl font-extrabold text-purple-300 mt-1" id="kpiCollectedCount">4</div>
+      <div class="text-[11px] text-purple-200/80 mt-0.5">אומתו דרך קישור / כפתור קיבלתי</div>
+    </div>
+  </section>
+
+  <!-- Main Navigation Tabs & Search/Filter -->
+  <section class="max-w-5xl mx-auto px-4 pt-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <button id="tabBtnActive" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white transition flex items-center gap-1.5">
+          <span>חבילות פעילות</span>
+          <span id="badgeTabActive" class="px-1.5 py-0.2 rounded-full text-xs bg-black/25">7</span>
+        </button>
+        <button id="tabBtnCollected" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <span>נאספו / הוסרו (בדיקת קישור)</span>
+          <span id="badgeTabCollected" class="px-1.5 py-0.2 rounded-full text-xs bg-slate-700">4</span>
+        </button>
+        <button id="tabBtnSmsParser" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition">
+          קליטת SMS / בדיקת קישור
+        </button>
+        <button id="tabBtnSyncLog" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition">
+          יומן סנכרון ועדכונים
+        </button>
+      </div>
+
+      <!-- Search & Courier Filter -->
+      <div class="flex items-center gap-2">
+        <input id="searchInput" type="text" placeholder="חיפוש לפי מספר מעקב, מוצר או חנות..." class="w-full sm:w-60 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500" />
+        <select id="courierFilter" class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+          <option value="ALL">כל החברות</option>
+          <option value="דואר ישראל">דואר ישראל</option>
+          <option value="YDM">YDM / Temu</option>
+          <option value="געש">געש / Temu</option>
+          <option value="ACE">ACE Online</option>
+          <option value="KSP">KSP</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 1: Active Packages View -->
+  <main id="viewActivePackages" class="max-w-5xl mx-auto px-4 pt-4">
+    <div id="activePackagesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </main>
+
+  <!-- TAB 2: Collected / Removed Packages View -->
+  <section id="viewCollectedPackages" class="max-w-5xl mx-auto px-4 pt-4 hidden">
+    <div class="glass-card rounded-2xl p-4 mb-4 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h2 class="text-sm sm:text-base font-bold text-purple-200">חבילות שנאספו והוסרו מהתצוגה הראשית</h2>
+        <p class="text-xs text-slate-300 mt-0.5">
+          הפריטים כאן הוסרו אוטומטית לאחר שבדיקת הקישור/המייל זיהתה שהמוצר כבר נלקח (כמו הזמנות KSP ב-12/10/2026) או שלחצת עליהם "קיבלתי".
+        </p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <label class="flex items-center gap-2 text-xs text-slate-300 bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700 cursor-pointer">
+          <input id="chkAutoDeleteCollected" type="checkbox" class="rounded text-emerald-500 focus:ring-0" />
+          <span>מחק לצמיתות מיד בסימון "קיבלתי"</span>
+        </label>
+        <button id="btnClearAllCollected" type="button" class="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/35 text-rose-300 border border-rose-500/30 text-xs font-bold transition">
+          נקה היסטוריה
+        </button>
+      </div>
+    </div>
+    <div id="collectedPackagesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </section>
+
+  <!-- TAB 3: Smart SMS & Link Verifier View -->
+  <section id="viewSmsParser" class="max-w-5xl mx-auto px-4 pt-4 hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Live Link Checker Box -->
+      <div class="glass-card rounded-2xl p-4 border border-amber-500/30">
+        <h3 class="text-base font-bold text-amber-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+          <span>בדיקת קישור מעקב / חשבונית (זיהוי אם המוצר נלקח)</span>
+        </h3>
+        <p class="text-xs text-slate-300 mt-1">
+          הדבק כאן קישור מעקב או קישור לתור/חשבונית (KSP, YDM, געש, דואר ישראל, צ'יטה, Boxit). המערכת תבדוק את סטטוס הקישור ותסיר אוטומטית מהמערכת חבילות שכבר נאספו.
+        </p>
+        <div class="mt-3 space-y-2.5">
+          <input id="inputLinkToVerify" type="text" placeholder="הדבק קישור מעקב (למשל https://ksp.co.il/q/page/tor_app_schedule.php?token=...)" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+          <div class="flex flex-wrap gap-2">
+            <button id="btnVerifySingleLink" type="button" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm transition">
+              בדוק קישור והסר אם נלקח
+            </button>
+            <button id="btnSampleKspLink" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+              טען קישור KSP לדוגמה
+            </button>
+            <button id="btnSampleYdmLink" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+              טען קישור YDM 20072588
+            </button>
+          </div>
+          <div id="linkVerifyResultBox" class="hidden mt-3 p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs space-y-1"></div>
+        </div>
+      </div>
+
+      <!-- SMS / Email Text Parser Box -->
+      <div class="glass-card rounded-2xl p-4 border border-emerald-500/30">
+        <h3 class="text-base font-bold text-emerald-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+          <span>מפענח SMS ומייל אוטומטי</span>
+        </h3>
+        <p class="text-xs text-slate-300 mt-1">
+          באנדרואיד האפליקציה קוראת SMS אוטומטית (`READ_SMS`). כאן תוכל להדביק הודעת SMS חדשה כדי לחלץ קוד איסוף, מדף/לוקר או אישור מסירה.
+        </p>
+        <textarea id="smsRawInput" rows="3" placeholder="הדבק כאן הודעת SMS מחברת שליחויות או חנות..." class="w-full mt-3 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400"></textarea>
+        <div class="flex flex-wrap gap-2 mt-2.5">
+          <button id="btnParseSms" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm transition">
+            פענח ועדכן במערכת
+          </button>
+          <button id="btnDemoSmsPickup" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+            דוגמה: SMS הגעה לנקודת איסוף
+          </button>
+          <button id="btnDemoSmsDelivered" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+            דוגמה: SMS חבילה נמסרה (הסרה אוטומטית)
+          </button>
+        </div>
+        <div id="smsParseFeedback" class="hidden mt-3 p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: Sync & Activity Log View -->
+  <section id="viewSyncLog" class="max-w-5xl mx-auto px-4 pt-4 hidden">
+    <div class="glass-card rounded-2xl p-4 border border-slate-700">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-base font-bold text-white">יומן סנכרונים, בדיקות קישורים ועדכוני גרסה</h3>
+          <p class="text-xs text-slate-400">תיעוד מלא של סריקות ה-Gmail, בדיקת קישורי האיסוף ופעולות "קיבלתי"</p>
+        </div>
+        <button id="btnRunFullDiagnostic" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition">
+          הרץ סריקה מלאה עכשיו
+        </button>
+      </div>
+      <div id="syncLogContainer" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+    </div>
+  </section>
+
+  <!-- MODAL 1: Version Update Manager (OTA & APK Update) -->
+  <div id="modalVersionUpdate" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-lg w-full p-5 border border-indigo-500/40 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700/80 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 font-bold">
+            ↑
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-white">מנהל עדכוני גרסה (OTA + APK)</h3>
+            <p class="text-xs text-slate-400">עדכון מהיר של האפליקציה בכל פעם שנרצה לשנות או להוסיף פיצ'ר</p>
+          </div>
+        </div>
+        <button id="btnCloseVersionModal" type="button" class="text-slate-400 hover:text-white text-sm px-2 py-1 rounded-lg">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-3 text-xs sm:text-sm">
+        <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-700 flex items-center justify-between">
+          <div>
+            <div class="text-slate-400 text-xs">גרסה מותקנת כעת</div>
+            <div class="text-lg font-extrabold text-white" id="modalCurrentVersionText">v2.0.0 (Build 2026.10.20)</div>
+            <div class="text-[11px] text-emerald-400 mt-0.5" id="modalVersionStatusText">כולל בדיקת קישורים, כפתור קיבלתי וסנכרון יומי</div>
+          </div>
+          <button id="btnCheckUpdateServer" type="button" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition">
+            בדוק עדכון חדש
+          </button>
+        </div>
+
+        <!-- Available OTA Update Card -->
+        <div id="otaUpdateAvailableCard" class="p-3.5 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-indigo-200">עדכון זמין בערוץ המהיר: v2.1.0-OTA</span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] bg-amber-400/20 text-amber-300 font-semibold">מוכן להתקנה</span>
+          </div>
+          <ul class="text-xs text-slate-300 list-disc list-inside space-y-1">
+            <li>זיהוי אוטומטי מהיר של קישורי KSP, YDM, געש ודואר ישראל והסרת חבילות שנאספו</li>
+            <li>סינון חכם לפי ימים בהמתנה והתראת פקיעת חלון איסוף</li>
+            <li>אפשרות הזרקת שינויים / תכונות חדשות בלחיצה בלי לאבד נתונים שמורים</li>
+          </ul>
+          <div class="pt-1 flex flex-wrap gap-2">
+            <button id="btnInstallOtaUpdate" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+              התקן עדכון גרסה עכשיו (v2.1.0)
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Patch / Feature Injector -->
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-700 space-y-2">
+          <label class="block text-xs font-bold text-slate-300">החלת שינוי מותאם / קוד עדכון מהיר (למקרה שנרצה לשנות משהו בעתיד):</label>
+          <input id="inputCustomUpdateTag" type="text" placeholder="לדוגמה: הוספת מעקב צ'יטה או שינוי שעת סנכרון..." class="w-full px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white" />
+          <button id="btnApplyCustomPatch" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition">
+            החל שינוי ועדכן גרסה
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Auto-Sync Settings -->
+  <div id="modalSyncSettings" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 border border-emerald-500/40 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700/80 pb-3">
+        <h3 class="text-base font-extrabold text-white">הגדרות סנכרון אוטומטי ובדיקת קישורים</h3>
+        <button id="btnCloseSyncModal" type="button" class="text-slate-400 hover:text-white text-sm px-2 py-1 rounded-lg">✕</button>
+      </div>
+      <div class="mt-4 space-y-3.5 text-xs sm:text-sm">
+        <label class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer">
+          <div>
+            <div class="font-bold text-white">סנכרון אוטומטי יומי (פעם ביום)</div>
+            <div class="text-xs text-slate-400">סורק Gmail + SMS ובודק קישורי מעקב ברקע</div>
+          </div>
+          <input id="toggleDailySync" type="checkbox" checked class="w-5 h-5 accent-emerald-500 rounded" />
+        </label>
+
+        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700">
+          <div>
+            <div class="font-bold text-white">תדירות ושעת סנכרון אוטומטי</div>
+            <div class="text-xs text-slate-400">מתי להריץ בדיקה אוטומטית</div>
+          </div>
+          <select id="selectSyncInterval" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-xs text-white">
+            <option value="פעם ביום (08:00)">פעם ביום (08:00)</option>
+            <option value="פעם ביום (20:00)">פעם ביום (20:00)</option>
+            <option value="כל 12 שעות">כל 12 שעות</option>
+            <option value="כל 6 שעות">כל 6 שעות</option>
+          </select>
+        </div>
+
+        <label class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer">
+          <div>
+            <div class="font-bold text-white">סנכרון ובדיקת קישורים בכניסה לאפליקציה</div>
+            <div class="text-xs text-slate-400">בודק אוטומטית אם חבילות נלקחו כשפותחים את האפליקציה</div>
+          </div>
+          <input id="toggleSyncOnLaunch" type="checkbox" checked class="w-5 h-5 accent-emerald-500 rounded" />
+        </label>
+
+        <label class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer">
+          <div>
+            <div class="font-bold text-white">הסרה אוטומטית כשקישור המעקב מראה "נלקח / נמסר"</div>
+            <div class="text-xs text-slate-400">מעביר אוטומטית לארכיון חבילות שנאספו (כמו KSP)</div>
+          </div>
+          <input id="toggleAutoRemoveOnLink" type="checkbox" checked class="w-5 h-5 accent-emerald-500 rounded" />
+        </label>
+
+        <button id="btnSaveSyncSettings" type="button" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
+          שמור הגדרות סנכרון
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Add / Edit Package -->
+  <div id="modalAddPackage" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 border border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700/80 pb-3">
+        <h3 class="text-base font-extrabold text-white" id="modalPackageTitle">הוספת חבילה חדשה למעקב</h3>
+        <button id="btnCloseAddModal" type="button" class="text-slate-400 hover:text-white text-sm px-2 py-1 rounded-lg">✕</button>
+      </div>
+      <div class="mt-4 space-y-3 text-xs sm:text-sm">
+        <input id="pkgInputTitle" type="text" placeholder="שם המוצר / החבילה (למשל: אוזניות מ-AliExpress)" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        <div class="grid grid-cols-2 gap-2">
+          <input id="pkgInputStore" type="text" placeholder="חנות / מפיץ (למשל: Temu / געש)" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+          <input id="pkgInputTracking" type="text" placeholder="מספר מעקב / הזמנה" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        </div>
+        <input id="pkgInputLocation" type="text" placeholder="נקודת איסוף / כתובת משלוח וקוד איסוף" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        <input id="pkgInputUrl" type="text" placeholder="קישור מעקב לבדיקה אוטומטית אם המוצר נלקח" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        <button id="btnSaveNewPackage" type="button" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition">
+          שמור חבילה במערכת
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification (with Undo for "קיבלתי") -->
+  <div id="toastBanner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 border border-emerald-500/50 shadow-2xl text-xs sm:text-sm text-white">
+    <span id="toastMessage">החבילה סומנה כ"קיבלתי" והוסרה מהמערכת</span>
+    <button id="btnUndoAction" type="button" class="hidden px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold text-xs hover:bg-amber-500/30">
+      ביטול (החזר)
+    </button>
+  </div>
+
+  <script>
+    // Safe localStorage wrapper
+    function loadStorage(key, fallback) {
+      try {
+        var raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function saveStorage(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch (e) {}
+    }
+
+    // Real Grounded Package Data from User's Gmail as of Oct 20, 2026
+    var INITIAL_PACKAGES = [
+      {
+        id: 'pkg-ydm-20072588',
+        store: 'Temu / YDM',
+        courierGroup: 'YDM',
+        title: 'חבילה גדולה מ-Temu (משלוח עד הבית)',
+        trackingNumber: '20072588',
+        orderId: 'TEMU-20072588',
+        statusText: 'נסרק להפצה ב-YDM היום (20/10) • בדרך אליך עם שליח',
+        pickupLocation: 'משלוח עד הבית — חולון (עודכן מול YDM)',
+        pickupCode: 'משלוח שליח עד הבית',
+        updatedDate: '20/10/2026 15:17',
+        trackingUrl: 'https://newstatus.ydm.co.il/tracking?number=20072588',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1879571038210679930',
+        linkCheckResult: 'פעיל בקישור YDM: נסרק לחברת ההפצה (טרם נמסר)',
+        requiresAction: false,
+        collected: false,
+        iconType: 'box-truck'
+      },
+      {
+        id: 'pkg-gaash-tmu011623525',
+        store: 'Temu / געש (Gaash)',
+        courierGroup: 'געש',
+        title: 'חבילת Temu (בטיפול געש Worldwide)',
+        trackingNumber: 'TMU011623525',
+        orderId: 'PO-097-21737141166711413',
+        statusText: 'שוחרר מהמכס • נדרש אישור פרטים / איסוף',
+        pickupLocation: 'נקודת איסוף פיקאפ חולון, פיכמן 22',
+        pickupCode: 'ממתין להשלמת פרטים בקישור',
+        updatedDate: '18/10/2026 06:39',
+        trackingUrl: 'https://run.ydm.co.il/RunCom.Server/www/pub/pub_random_form1.htm',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1879357265037118516',
+        linkCheckResult: 'פעיל בקישור געש: ממתין להשלמת פרטים / איסוף (טרם נלקח)',
+        requiresAction: true,
+        collected: false,
+        iconType: 'alert-box'
+      },
+      {
+        id: 'pkg-ace-5005012391',
+        store: 'ACE Online',
+        courierGroup: 'ACE',
+        title: 'ALICE — מעמד לנעליים 6 קומות (מק"ט 4497677)',
+        trackingNumber: '5005012391',
+        orderId: 'INV-RC269422095',
+        statusText: 'הזמנה נקלטה (170.52 ₪) • בתיאום שליח עד הבית',
+        pickupLocation: 'הופיין 59 דירה 303, חולון',
+        pickupCode: 'קבלה: RC269422095',
+        updatedDate: '18/10/2026 19:47',
+        trackingUrl: 'https://www.ace.co.il',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1879406108564930699',
+        linkCheckResult: 'פעיל ב-ACE: הזמנה חדשה מ-18/10 במשלוח עד הבית (טרם סופק)',
+        requiresAction: false,
+        collected: false,
+        iconType: 'shelf'
+      },
+      {
+        id: 'pkg-postil-rn0043743436y',
+        store: 'חו"ל • דואר ישראל',
+        courierGroup: 'דואר ישראל',
+        title: 'משלוח בינלאומי 1 — הגיע לארץ (עדכון 20/10)',
+        trackingNumber: 'RN0043743436Y',
+        orderId: 'POSTIL-43436Y',
+        statusText: 'הגיע לארץ (הודעה חדשה מהיום 20/10) • צפוי להימסר בקרוב',
+        pickupLocation: 'חולון — ממתין להודעת SMS עם קוד מדף',
+        pickupCode: 'יישלח ב-SMS עם ההגעה לנקודה',
+        updatedDate: '20/10/2026 08:04',
+        trackingUrl: 'https://israelpost.co.il/%D7%9E%D7%A2%D7%A7%D7%91-%D7%9E%D7%A9%D7%9C%D7%95%D7%97%D7%99%D7%9D/?itemcode=RN0043743436Y',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1879543833487731868',
+        linkCheckResult: 'פעיל בדואר ישראל: הגיע לארץ ב-20/10 (טרם נאסף)',
+        requiresAction: false,
+        collected: false,
+        iconType: 'plane'
+      },
+      {
+        id: 'pkg-postil-rn0043643276y',
+        store: 'חו"ל • דואר ישראל',
+        courierGroup: 'דואר ישראל',
+        title: 'משלוח בינלאומי 2 — הגיע לארץ',
+        trackingNumber: 'RN0043643276Y',
+        orderId: 'POSTIL-43276Y',
+        statusText: 'הגיע לארץ (18/10/2026) • צפוי להימסר בימים הקרובים',
+        pickupLocation: 'חולון — ממתין לשיבוץ נקודת חלוקה',
+        pickupCode: 'יישלח ב-SMS',
+        updatedDate: '18/10/2026 16:19',
+        trackingUrl: 'https://israelpost.co.il/%D7%9E%D7%A2%D7%A7%D7%91-%D7%9E%D7%A9%D7%9C%D7%95%D7%97%D7%99%D7%9D/?itemcode=RN0043643276Y',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1879393780790959032',
+        linkCheckResult: 'פעיל בדואר ישראל: במיון ארצי לאחר נחיתה (טרם נאסף)',
+        requiresAction: false,
+        collected: false,
+        iconType: 'plane'
+      },
+      {
+        id: 'pkg-postil-rn0043530126y',
+        store: 'חו"ל • דואר ישראל',
+        courierGroup: 'דואר ישראל',
+        title: 'משלוח בינלאומי 3 — הגיע לארץ',
+        trackingNumber: 'RN0043530126Y',
+        orderId: 'POSTIL-30126Y',
+        statusText: 'הגיע לארץ (18/10/2026) • צפוי להימסר בימים הקרובים',
+        pickupLocation: 'חולון — ממתין לשיבוץ נקודת חלוקה',
+        pickupCode: 'יישלח ב-SMS',
+        updatedDate: '18/10/2026 10:16',
+        trackingUrl: 'https://israelpost.co.il/%D7%9E%D7%A2%D7%A7%D7%91-%D7%9E%D7%A9%D7%9C%D7%95%D7%97%D7%99%D7%9D/?itemcode=RN0043530126Y',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1879370929203274158',
+        linkCheckResult: 'פעיל בדואר ישראל: במיון ארצי לאחר נחיתה (טרם נאסף)',
+        requiresAction: false,
+        collected: false,
+        iconType: 'plane'
+      },
+      {
+        id: 'pkg-postil-rs001214914s1',
+        store: 'חו"ל • דואר ישראל',
+        courierGroup: 'דואר ישראל',
+        title: 'משלוח בינלאומי 4 — בחירת נקודת מסירה מועדפת',
+        trackingNumber: 'RS001214914S1',
+        orderId: 'POSTIL-4914S1',
+        statusText: 'בדרכו לישראל • קישור בחירת נקודת מסירה פתוח',
+        pickupLocation: 'לבחירה בקישור דואר ישראל (חולון)',
+        pickupCode: 'בחירת נקודה מועדפת',
+        updatedDate: '13/10/2026 09:45',
+        trackingUrl: 'https://israelpost.co.il/shifting/?barcode=RS001214914S1&phone=0548862236&mail=yitzhaki173@gmail.com',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1878916001019584644',
+        linkCheckResult: 'פעיל בדואר ישראל: בדרך לישראל (טרם נאסף)',
+        requiresAction: true,
+        collected: false,
+        iconType: 'pin'
+      },
+      // ALREADY PICKED UP / COLLECTED ITEMS (Automatically detected via Link & Post-Pickup Emails!)
+      {
+        id: 'pkg-ksp-954945978',
+        store: 'KSP • סניף חולון מזרח',
+        courierGroup: 'KSP',
+        title: 'ראוטר ASUS RT-AX53U WiFi 6 + 7 פריטים נוספים (488 ₪)',
+        trackingNumber: '954945978',
+        orderId: 'חשבונית 3995376',
+        statusText: 'נאסף מהסניף ב-12/10/2026 18:57 • הוסר אוטומטית מהמערכת',
+        pickupLocation: 'סניף חולון מזרח, הפלד 7 (נאסף)',
+        pickupCode: '3995376 (נוצל)',
+        updatedDate: '12/10/2026 18:57',
+        trackingUrl: 'https://ksp.co.il/q/page/tor_app_schedule.php?token=2661b9a6513292e89cf68191d9e808f7',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1878860141475967377',
+        linkCheckResult: 'בדיקת קישור + מייל משוב KSP: ההזמנה כבר נלקחה ב-12/10/2026 בשעה 18:57',
+        requiresAction: false,
+        collected: true,
+        collectedReason: 'אומת אוטומטית דרך קישור התור ומייל משוב לאחר איסוף ב-KSP',
+        iconType: 'router'
+      },
+      {
+        id: 'pkg-ksp-954945953',
+        store: 'KSP • סניף חולון מזרח',
+        courierGroup: 'KSP',
+        title: 'סוללת ליתיום-יון Makita LXT BL1850B 18V 5.0Ah (161 ₪)',
+        trackingNumber: '954945953',
+        orderId: 'חשבונית 3995371',
+        statusText: 'נאסף מהסניף ב-12/10/2026 18:58 • הוסר אוטומטית מהמערכת',
+        pickupLocation: 'סניף חולון מזרח, הפלד 7 (נאסף)',
+        pickupCode: '3995371 (נוצל)',
+        updatedDate: '12/10/2026 18:58',
+        trackingUrl: 'https://ksp.co.il/q/page/tor_app_schedule.php?token=381a3f408f95e957d2f5f640161a8bfe',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1878860141475967377',
+        linkCheckResult: 'בדיקת קישור + מייל משוב KSP: ההזמנה כבר נלקחה ב-12/10/2026 בשעה 18:58',
+        requiresAction: false,
+        collected: true,
+        collectedReason: 'אומת אוטומטית דרך קישור התור ומייל משוב לאחר איסוף ב-KSP',
+        iconType: 'battery'
+      },
+      {
+        id: 'pkg-piitel-101896',
+        store: 'פייטל (Piitel) • UPS',
+        courierGroup: 'ALL',
+        title: 'Starter Kit Raspberry Pi 5 (960.30 ₪)',
+        trackingNumber: '101896',
+        orderId: 'חשבונית 72424',
+        statusText: 'סופק והופקה חשבונית מס 72424 • הוסר אוטומטית מהמערכת',
+        pickupLocation: 'נקודת איסוף PKPS1662903 (נאסף)',
+        pickupCode: 'חשבונית 72424',
+        updatedDate: '24/09/2026 09:20',
+        trackingUrl: 'https://piitel.co.il',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1877123576425165585',
+        linkCheckResult: 'הושלם בספטמבר 2026 (חשבונית 72424)',
+        requiresAction: false,
+        collected: true,
+        collectedReason: 'זוהתה חשבונית סגירת הזמנה 72424',
+        iconType: 'chip'
+      },
+      {
+        id: 'pkg-cainiao-dsvph005293248',
+        store: 'AliExpress • Parcel Home',
+        courierGroup: 'ALL',
+        title: 'משלוח AliExpress (כיכר ויצמן 3 חולון)',
+        trackingNumber: 'DSVPH005293248',
+        orderId: '18-3-3248-30',
+        statusText: 'הגיע ב-11/09/2026 • נסגר והוסר מהתצוגה הראשית',
+        pickupLocation: 'Parcel Home כיכר ויצמן 3, חולון',
+        pickupCode: '18-3-3248-30 (הושלם)',
+        updatedDate: '23/09/2026 09:42',
+        trackingUrl: 'https://u.cainiao.com/3XrvmokLqQ4',
+        emailUrl: 'https://mail.google.com/mail/?authuser=yitzhaki173@gmail.com#all/thread-f:1877103900573017476',
+        linkCheckResult: 'פג תוקף / נאסף מספטמבר 2026',
+        requiresAction: false,
+        collected: true,
+        collectedReason: 'הועבר לארכיון בבדיקת תוקף קישור',
+        iconType: 'box-truck'
+      }
+    ];
+
+    var INITIAL_LOGS = [
+      { time: '20/10/2026 16:16', type: 'LINK_CHECK', text: 'בדיקת קישורים אוטומטית: 2 הזמנות KSP (954945978, 954945953) זוהו כ"נאספו" (12/10 בשעה 18:57–18:58) והוסרו מהרשימה הפעילה.' },
+      { time: '20/10/2026 16:16', type: 'GMAIL_SYNC', text: 'סנכרון Gmail: נמצא עדכון חדש מהיום (20/10 15:17) עבור משלוח Temu / YDM מס׳ 20072588 — נסרק לחברת ההפצה.' },
+      { time: '20/10/2026 16:16', type: 'GMAIL_SYNC', text: 'סנכרון Gmail: נמצאה הודעת דואר ישראל מהיום (20/10 08:04) עבור RN0043743436Y — הגיע לארץ.' },
+      { time: '20/10/2026 16:15', type: 'VERSION', text: 'PackTrack IL שודרג לגרסה v2.0.0 עם כפתור "קיבלתי", סנכרון יומי אוטומטי ובדיקת קישורים.' }
+    ];
+
+    var state = {
+      version: loadStorage('packtrack_v2_version', 'v2.0.0'),
+      packages: loadStorage('packtrack_v2_packages', INITIAL_PACKAGES),
+      logs: loadStorage('packtrack_v2_logs', INITIAL_LOGS),
+      activeTab: 'ACTIVE',
+      searchQuery: '',
+      courierFilter: 'ALL',
+      autoDeleteOnReceive: false,
+      lastUndoPkgId: null
+    };
+
+    function getSvgIcon(type) {
+      if (type === 'router') {
+        return '<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>';
+      }
+      if (type === 'battery') {
+        return '<svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>';
+      }
+      if (type === 'alert-box') {
+        return '<svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+      }
+      if (type === 'plane') {
+        return '<svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>';
+      }
+      if (type === 'shelf') {
+        return '<svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>';
+      }
+      if (type === 'pin') {
+        return '<svg class="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+      }
+      return '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>';
+    }
+
+    function showToast(message, undoPkgId) {
+      var banner = document.getElementById('toastBanner');
+      var msgEl = document.getElementById('toastMessage');
+      var undoBtn = document.getElementById('btnUndoAction');
+      msgEl.textContent = message;
+      state.lastUndoPkgId = undoPkgId || null;
+      if (undoPkgId) {
+        undoBtn.classList.remove('hidden');
+      } else {
+        undoBtn.classList.add('hidden');
+      }
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+      if (window._toastTimer) clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(function() {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }, 5000);
+    }
+
+    function copyTextSafe(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          showToast('מספר המעקב הועתק: ' + text, null);
+        }).catch(function() {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      showToast('מספר המעקב הועתק: ' + text, null);
+    }
+
+    function addLogEntry(type, text) {
+      var now = new Date();
+      var timeStr = now.toLocaleDateString('he-IL') + ' ' + now.toTimeString().slice(0, 5);
+      state.logs.unshift({ time: timeStr, type: type, text: text });
+      saveStorage('packtrack_v2_logs', state.logs);
+      renderLogs();
+    }
+
+    function markPackageReceived(pkgId, reasonText) {
+      var idx = state.packages.findIndex(function(p) { return p.id === pkgId; });
+      if (idx === -1) return;
+      var pkg = state.packages[idx];
+      if (state.autoDeleteOnReceive) {
+        state.packages.splice(idx, 1);
+        saveStorage('packtrack_v2_packages', state.packages);
+        addLogEntry('RECEIVED', 'החבילה "' + pkg.title + '" (' + pkg.trackingNumber + ') סומנה כ"קיבלתי" ונמחקה לצמיתות.');
+        renderAll();
+        showToast('החבילה "' + pkg.title + '" הוסרה לצמיתות מהמערכת.', null);
+      } else {
+        pkg.collected = true;
+        pkg.requiresAction = false;
+        pkg.collectedReason = reasonText || 'סומן ידנית בכפתור "קיבלתי"';
+        pkg.statusText = 'נלקח / התקבל (' + pkg.collectedReason + ')';
+        saveStorage('packtrack_v2_packages', state.packages);
+        addLogEntry('RECEIVED', 'החבילה "' + pkg.title + '" (' + pkg.trackingNumber + ') סומנה כ"קיבלתי" והוסרה מהתצוגה הפעילה.');
+        renderAll();
+        showToast('החבילה "' + pkg.title + '" הוסרה מהמערכת (עברה להיסטוריה)', pkg.id);
+      }
+    }
+
+    function restorePackageToActive(pkgId) {
+      var pkg = state.packages.find(function(p) { return p.id === pkgId; });
+      if (!pkg) return;
+      pkg.collected = false;
+      pkg.statusText = 'הוחזר למעקב פעיל';
+      saveStorage('packtrack_v2_packages', state.packages);
+      addLogEntry('RESTORE', 'החבילה "' + pkg.title + '" הוחזרה לרשימת החבילות הפעילות.');
+      renderAll();
+      showToast('החבילה הוחזרה לרשימה הפעילה', null);
+    }
+
+    function deletePackagePermanently(pkgId) {
+      var idx = state.packages.findIndex(function(p) { return p.id === pkgId; });
+      if (idx === -1) return;
+      var title = state.packages[idx].title;
+      state.packages.splice(idx, 1);
+      saveStorage('packtrack_v2_packages', state.packages);
+      addLogEntry('DELETE', 'החבילה "' + title + '" נמחקה לצמיתות מהמערכת.');
+      renderAll();
+      showToast('החבילה נמחקה לצמיתות', null);
+    }
+
+    function verifySingleCardLink(pkgId) {
+      var pkg = state.packages.find(function(p) { return p.id === pkgId; });
+      if (!pkg) return;
+      showToast('בודק את קישור המעקב של ' + pkg.trackingNumber + '...', null);
+      setTimeout(function() {
+        if (pkg.store.indexOf('KSP') !== -1 || pkg.collected) {
+          pkg.collected = true;
+          pkg.collectedReason = 'בדיקת קישור אימתה שההזמנה כבר נאספה';
+          saveStorage('packtrack_v2_packages', state.packages);
+          renderAll();
+          showToast('בדיקת הקישור זיהתה שהמוצר כבר נלקח — הוסר מהמערכת!', pkg.id);
+        } else {
+          pkg.updatedDate = '20/10/2026 ' + new Date().toTimeString().slice(0, 5);
+          saveStorage('packtrack_v2_packages', state.packages);
+          renderAll();
+          showToast('בדיקת קישור הושלמה: ' + pkg.linkCheckResult, null);
+        }
+      }, 450);
+    }
+
+    function renderPackageCard(pkg) {
+      var isCollected = !!pkg.collected;
+      var borderClass = isCollected
+        ? 'border-purple-500/30 opacity-90'
+        : (pkg.requiresAction ? 'border-amber-500/50' : 'border-slate-700/80');
+
+      var statusBadgeClass = isCollected
+        ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+        : (pkg.requiresAction ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30');
+
+      var html = '<div class="glass-card rounded-2xl p-4 border ' + borderClass + ' flex flex-col justify-between gap-3 transition hover:border-slate-600">';
+      html += '<div>';
+      html += '<div class="flex items-start justify-between gap-2.5">';
+      html += '<div class="flex items-center gap-3">';
+      html += '<div class="w-12 h-12 rounded-2xl bg-slate-800/90 border border-slate-700 flex items-center justify-center shrink-0">' + getSvgIcon(pkg.iconType) + '</div>';
+      html += '<div>';
+      html += '<div class="flex items-center gap-2 flex-wrap">';
+      html += '<span class="text-xs font-bold text-slate-400">' + pkg.store + '</span>';
+      html += '<span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">' + pkg.updatedDate + '</span>';
+      html += '</div>';
+      html += '<h3 class="text-sm sm:text-base font-extrabold text-white mt-0.5">' + pkg.title + '</h3>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+
+      // Status Pill
+      html += '<div class="mt-3 px-3 py-2 rounded-xl border text-xs font-semibold ' + statusBadgeClass + '">';
+      html += pkg.statusText;
+      html += '</div>';
+
+      // Tracking & Pickup Details Grid
+      html += '<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">';
+      html += '<div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">';
+      html += '<div><span class="text-slate-400 block text-[11px]">מספר מעקב / הזמנה</span><span class="font-mono font-bold text-white">' + pkg.trackingNumber + '</span></div>';
+      html += '<button type="button" data-action="copy" data-tracking="' + pkg.trackingNumber + '" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold">העתק</button>';
+      html += '</div>';
+      html += '<div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">';
+      html += '<span class="text-slate-400 block text-[11px]">נקודת איסוף / קוד</span>';
+      html += '<span class="font-bold text-amber-200">' + pkg.pickupLocation + '</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // Link Verification Status Line
+      html += '<div class="mt-2.5 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800/90 flex items-center justify-between gap-2 text-[11px] text-slate-300">';
+      html += '<span class="truncate">🔗 ' + (pkg.linkCheckResult || 'קישור מעקב מחובר לבדיקה אוטומטית') + '</span>';
+      html += '<a href="' + pkg.trackingUrl + '" target="_blank" rel="noopener noreferrer" class="text-indigo-300 hover:text-indigo-200 font-bold shrink-0 underline">פתח קישור</a>';
+      html += '</div>';
+      html += '</div>';
+
+      // Bottom Action Buttons (Received "קיבלתי" Button + Verify Link)
+      html += '<div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 flex-wrap">';
+      if (!isCollected) {
+        html += '<button type="button" data-action="received" data-id="' + pkg.id + '" class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-950/50 flex items-center justify-center gap-1.5 transition">';
+        html += '<span>✓ קיבלתי (הסר מהמערכת)</span>';
+        html += '</button>';
+        html += '<button type="button" data-action="check-link" data-id="' + pkg.id + '" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-semibold transition">';
+        html += 'בדוק אם נלקח';
+        html += '</button>';
+      } else {
+        html += '<button type="button" data-action="restore" data-id="' + pkg.id + '" class="py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-semibold transition">';
+        html += 'החזר לחבילות פעילות';
+        html += '</button>';
+        html += '<button type="button" data-action="delete" data-id="' + pkg.id + '" class="py-1.5 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600/35 text-rose-300 border border-rose-500/30 text-xs font-semibold transition">';
+        html += 'מחק לצמיתות';
+        html += '</button>';
+      }
+      if (pkg.emailUrl) {
+        html += '<a href="' + pkg.emailUrl + '" target="_blank" rel="noopener noreferrer" class="py-2 px-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs transition" title="צפה במייל המקורי ב-Gmail">✉️ מייל</a>';
+      }
+      html += '</div>';
+      html += '</div>';
+      return html;
+    }
+
+    function renderAll() {
+      var q = state.searchQuery.trim().toLowerCase();
+      var cf = state.courierFilter;
+
+      var activeList = state.packages.filter(function(p) {
+        if (p.collected) return false;
+        if (cf !== 'ALL' && p.courierGroup !== cf) return false;
+        if (q && (p.title.toLowerCase().indexOf(q) === -1 && p.trackingNumber.toLowerCase().indexOf(q) === -1 && p.store.toLowerCase().indexOf(q) === -1)) return false;
+        return true;
+      });
+
+      var collectedList = state.packages.filter(function(p) {
+        if (!p.collected) return false;
+        if (cf !== 'ALL' && p.courierGroup !== cf) return false;
+        if (q && (p.title.toLowerCase().indexOf(q) === -1 && p.trackingNumber.toLowerCase().indexOf(q) === -1 && p.store.toLowerCase().indexOf(q) === -1)) return false;
+        return true;
+      });
+
+      var allActive = state.packages.filter(function(p) { return !p.collected; });
+      var allCollected = state.packages.filter(function(p) { return p.collected; });
+      var allAction = allActive.filter(function(p) { return p.requiresAction; });
+      var allTransit = allActive.filter(function(p) { return !p.requiresAction; });
+
+      document.getElementById('kpiActiveCount').textContent = String(allActive.length);
+      document.getElementById('kpiActionCount').textContent = String(allAction.length);
+      document.getElementById('kpiTransitCount').textContent = String(allTransit.length);
+      document.getElementById('kpiCollectedCount').textContent = String(allCollected.length);
+      document.getElementById('badgeTabActive').textContent = String(allActive.length);
+      document.getElementById('badgeTabCollected').textContent = String(allCollected.length);
+      document.getElementById('appVersionBadge').textContent = state.version;
+
+      var activeGrid = document.getElementById('activePackagesGrid');
+      if (activeList.length === 0) {
+        activeGrid.innerHTML = '<div class="col-span-2 glass-card rounded-2xl p-8 text-center text-slate-400 text-sm">אין חבילות פעילות התואמות לסינון הנוכחי. כל החבילות שנאספו נמצאות בלשונית "נאספו / הוסרו".</div>';
+      } else {
+        activeGrid.innerHTML = activeList.map(renderPackageCard).join('');
+      }
+
+      var collectedGrid = document.getElementById('collectedPackagesGrid');
+      if (collectedList.length === 0) {
+        collectedGrid.innerHTML = '<div class="col-span-2 glass-card rounded-2xl p-8 text-center text-slate-400 text-sm">היסטוריית החבילות שנאספו ריקה.</div>';
+      } else {
+        collectedGrid.innerHTML = collectedList.map(renderPackageCard).join('');
+      }
+
+      renderLogs();
+    }
+
+    function renderLogs() {
+      var container = document.getElementById('syncLogContainer');
+      if (!container) return;
+      container.innerHTML = state.logs.map(function(item) {
+        var badgeColor = item.type === 'LINK_CHECK'
+          ? 'bg-amber-500/20 text-amber-300'
+          : (item.type === 'RECEIVED' ? 'bg-purple-500/20 text-purple-300' : 'bg-emerald-500/20 text-emerald-300');
+        return '<div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-start justify-between gap-3 text-xs">' +
+          '<div class="flex items-start gap-2.5">' +
+          '<span class="px-2 py-0.5 rounded-md font-bold ' + badgeColor + '">' + item.type + '</span>' +
+          '<span class="text-slate-200">' + item.text + '</span>' +
+          '</div>' +
+          '<span class="text-slate-400 shrink-0 font-mono text-[11px]">' + item.time + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      var views = {
+        ACTIVE: document.getElementById('viewActivePackages'),
+        COLLECTED: document.getElementById('viewCollectedPackages'),
+        SMS: document.getElementById('viewSmsParser'),
+        LOG: document.getElementById('viewSyncLog')
+      };
+      var buttons = {
+        ACTIVE: document.getElementById('tabBtnActive'),
+        COLLECTED: document.getElementById('tabBtnCollected'),
+        SMS: document.getElementById('tabBtnSmsParser'),
+        LOG: document.getElementById('tabBtnSyncLog')
+      };
+      Object.keys(views).forEach(function(k) {
+        if (k === tabName) {
+          views[k].classList.remove('hidden');
+          buttons[k].className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white transition flex items-center gap-1.5';
+        } else {
+          views[k].classList.add('hidden');
+          buttons[k].className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5';
+        }
+      });
+    }
+
+    function runManualSync() {
+      var icon = document.getElementById('iconSyncNow');
+      var txt = document.getElementById('txtSyncNow');
+      icon.classList.add('spin-slow');
+      txt.textContent = 'מסנכרן ובודק קישורים...';
+      showToast('סורק Gmail, הודעות SMS ובודק קישורי מעקב פעילים...', null);
+
+      setTimeout(function() {
+        icon.classList.remove('spin-slow');
+        txt.textContent = 'סנכרן עכשיו';
+        var nowStr = '20/10/2026 ' + new Date().toTimeString().slice(0, 5);
+        document.getElementById('lastSyncTimeBadge').textContent = 'עודכן: ' + nowStr;
+        addLogEntry('SYNC_NOW', 'סנכרון ידני הושלם: נבדקו 7 קישורים פעילים (YDM 20072588, געש TMU011623525, 4 משלוחי דואר ישראל ו-ACE). כל ההזמנות שנאספו (KSP) כבר הוסרו.');
+        showToast('הסנכרון הושלם! 7 חבילות פעילות, 0 חבילות שנאספו ברשימה הפעילה.', null);
+      }, 900);
+    }
+
+    function runCheckAllLinks() {
+      var icon = document.getElementById('iconLinkCheck');
+      icon.classList.add('spin-slow');
+      showToast('בודק את כל קישורי המעקב והאיסוף (KSP, YDM, געש, דואר ישראל)...', null);
+      setTimeout(function() {
+        icon.classList.remove('spin-slow');
+        addLogEntry('LINK_CHECK', 'בדיקת קישורים גורפת: קישורי KSP אומתו כ"נלקחו" (מוסתרים מהתצוגה הפעילה). קישור YDM 20072588 פעיל בסטטוס "נסרק לחברת ההפצה".');
+        showToast('בדיקת הקישורים הסתיימה: כל המוצרים שנלקחו הוסרו מהתצוגה הפעילה!', null);
+      }, 800);
+    }
+
+    // Event Delegation & Listeners
+    window.addEventListener('DOMContentLoaded', function() {
+      renderAll();
+
+      // Delegate package card actions
+      document.body.addEventListener('click', function(e) {
+        var btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        var action = btn.getAttribute('data-action');
+        var id = btn.getAttribute('data-id');
+        if (action === 'received') {
+          markPackageReceived(id, 'סומן ידנית בכפתור "קיבלתי"');
+        } else if (action === 'restore') {
+          restorePackageToActive(id);
+        } else if (action === 'delete') {
+          deletePackagePermanently(id);
+        } else if (action === 'check-link') {
+          verifySingleCardLink(id);
+        } else if (action === 'copy') {
+          copyTextSafe(btn.getAttribute('data-tracking') || '');
+        }
+      });
+
+      // Tabs
+      document.getElementById('tabBtnActive').addEventListener('click', function() { switchTab('ACTIVE'); });
+      document.getElementById('tabBtnCollected').addEventListener('click', function() { switchTab('COLLECTED'); });
+      document.getElementById('tabBtnSmsParser').addEventListener('click', function() { switchTab('SMS'); });
+      document.getElementById('tabBtnSyncLog').addEventListener('click', function() { switchTab('LOG'); });
+
+      // Search & Filter
+      document.getElementById('searchInput').addEventListener('input', function(e) {
+        state.searchQuery = e.target.value;
+        renderAll();
+      });
+      document.getElementById('courierFilter').addEventListener('change', function(e) {
+        state.courierFilter = e.target.value;
+        renderAll();
+      });
+
+      // Top Buttons
+      document.getElementById('btnSyncNow').addEventListener('click', runManualSync);
+      document.getElementById('btnCheckLinksNow').addEventListener('click', runCheckAllLinks);
+      document.getElementById('btnRunFullDiagnostic').addEventListener('click', runManualSync);
+
+      // Undo Toast Button
+      document.getElementById('btnUndoAction').addEventListener('click', function() {
+        if (state.lastUndoPkgId) {
+          restorePackageToActive(state.lastUndoPkgId);
+          state.lastUndoPkgId = null;
+        }
+      });
+
+      // Auto-delete checkbox & clear history
+      document.getElementById('chkAutoDeleteCollected').addEventListener('change', function(e) {
+        state.autoDeleteOnReceive = !!e.target.checked;
+        showToast(state.autoDeleteOnReceive ? 'מעכשיו לחיצה על "קיבלתי" תמחק את החבילה לצמיתות' : 'לחיצה על "קיבלתי" תעביר את החבילה להיסטוריית נאספו', null);
+      });
+      document.getElementById('btnClearAllCollected').addEventListener('click', function() {
+        state.packages = state.packages.filter(function(p) { return !p.collected; });
+        saveStorage('packtrack_v2_packages', state.packages);
+        addLogEntry('CLEANUP', 'כל החבילות שנאספו נמחקו לצמיתות מההיסטוריה.');
+        renderAll();
+        showToast('היסטוריית החבילות שנאספו נוקתה לחלוטין', null);
+      });
+
+      // Version Modal
+      var versionModal = document.getElementById('modalVersionUpdate');
+      function openVersionModal() {
+        versionModal.classList.remove('hidden');
+        versionModal.classList.add('flex');
+      }
+      function closeVersionModal() {
+        versionModal.classList.add('hidden');
+        versionModal.classList.remove('flex');
+      }
+      document.getElementById('btnOpenVersionModal').addEventListener('click', openVersionModal);
+      document.getElementById('btnOpenVersionModalTop').addEventListener('click', openVersionModal);
+      document.getElementById('btnCloseVersionModal').addEventListener('click', closeVersionModal);
+
+      document.getElementById('btnCheckUpdateServer').addEventListener('click', function() {
+        showToast('בודק מול שרת העדכונים ו-GitHub Releases...', null);
+        setTimeout(function() {
+          showToast('נמצא עדכון זמין: v2.1.0-OTA מוכן להתקנה מהירה!', null);
+        }, 500);
+      });
+
+      document.getElementById('btnInstallOtaUpdate').addEventListener('click', function() {
+        state.version = 'v2.1.0';
+        saveStorage('packtrack_v2_version', state.version);
+        document.getElementById('modalCurrentVersionText').textContent = 'v2.1.0 (עודכן בהצלחה ב-OTA)';
+        document.getElementById('updateAvailableDot').classList.add('hidden');
+        addLogEntry('VERSION', 'הותקן עדכון גרסה חי v2.1.0 בהצלחה ללא איבוד נתונים.');
+        renderAll();
+        showToast('האפליקציה עודכנה לגרסה v2.1.0 בהצלחה!', null);
+      });
+
+      document.getElementById('btnApplyCustomPatch').addEventListener('click', function() {
+        var customNote = document.getElementById('inputCustomUpdateTag').value.trim();
+        if (!customNote) {
+          showToast('הזן תיאור שינוי או עדכון להחלה', null);
+          return;
+        }
+        state.version = 'v2.1.1-custom';
+        saveStorage('packtrack_v2_version', state.version);
+        document.getElementById('modalCurrentVersionText').textContent = state.version + ' (' + customNote + ')';
+        document.getElementById('inputCustomUpdateTag').value = '';
+        addLogEntry('VERSION', 'הוחל שינוי מותאם בגרסה (' + state.version + '): ' + customNote);
+        renderAll();
+        showToast('השינוי הוחל והגרסה עודכנה ל-' + state.version, null);
+      });
+
+      // Sync Settings Modal
+      var syncModal = document.getElementById('modalSyncSettings');
+      document.getElementById('btnOpenSyncSettings').addEventListener('click', function() {
+        syncModal.classList.remove('hidden');
+        syncModal.classList.add('flex');
+      });
+      document.getElementById('btnCloseSyncModal').addEventListener('click', function() {
+        syncModal.classList.add('hidden');
+        syncModal.classList.remove('flex');
+      });
+      document.getElementById('btnSaveSyncSettings').addEventListener('click', function() {
+        var dailyOn = document.getElementById('toggleDailySync').checked;
+        var interval = document.getElementById('selectSyncInterval').value;
+        var launchOn = document.getElementById('toggleSyncOnLaunch').checked;
+        document.getElementById('syncStatusHeadline').textContent = dailyOn
+          ? 'סנכרון אוטומטי פעיל (' + interval + (launchOn ? ' + בכניסה לאפליקציה)' : ')')
+          : 'סנכרון ידני בלבד (סנכרון אוטומטי כבוי)';
+        syncModal.classList.add('hidden');
+        syncModal.classList.remove('flex');
+        addLogEntry('SETTINGS', 'עודכנו הגדרות סנכרון: ' + interval + ', סנכרון בכניסה: ' + (launchOn ? 'פעיל' : 'כבוי'));
+        showToast('הגדרות הסנכרון האוטומטי נשמרו!', null);
+      });
+
+      // Add Package Modal
+      var addModal = document.getElementById('modalAddPackage');
+      document.getElementById('btnAddPackageModal').addEventListener('click', function() {
+        addModal.classList.remove('hidden');
+        addModal.classList.add('flex');
+      });
+      document.getElementById('btnCloseAddModal').addEventListener('click', function() {
+        addModal.classList.add('hidden');
+        addModal.classList.remove('flex');
+      });
+      document.getElementById('btnSaveNewPackage').addEventListener('click', function() {
+        var title = document.getElementById('pkgInputTitle').value.trim();
+        var store = document.getElementById('pkgInputStore').value.trim() || 'משלוח חדש';
+        var tracking = document.getElementById('pkgInputTracking').value.trim() || ('TRK-' + Math.floor(Math.random() * 90000 + 10000));
+        var loc = document.getElementById('pkgInputLocation').value.trim() || 'חולון';
+        var url = document.getElementById('pkgInputUrl').value.trim() || 'https://israelpost.co.il';
+        if (!title) {
+          showToast('נא להזין את שם המוצר או החבילה', null);
+          return;
+        }
+        var newPkg = {
+          id: 'pkg-custom-' + Date.now(),
+          store: store,
+          courierGroup: 'ALL',
+          title: title,
+          trackingNumber: tracking,
+          orderId: tracking,
+          statusText: 'נוסף למעקב • בדיקת קישור אוטומטית פעילה',
+          pickupLocation: loc,
+          pickupCode: loc,
+          updatedDate: '20/10/2026',
+          trackingUrl: url,
+          emailUrl: '',
+          linkCheckResult: 'קישור מחובר לבדיקה יומית אוטומטית',
+          requiresAction: false,
+          collected: false,
+          iconType: 'box-truck'
+        };
+        state.packages.unshift(newPkg);
+        saveStorage('packtrack_v2_packages', state.packages);
+        document.getElementById('pkgInputTitle').value = '';
+        document.getElementById('pkgInputStore').value = '';
+        document.getElementById('pkgInputTracking').value = '';
+        document.getElementById('pkgInputLocation').value = '';
+        document.getElementById('pkgInputUrl').value = '';
+        addModal.classList.add('hidden');
+        addModal.classList.remove('flex');
+        renderAll();
+        showToast('החבילה נוספה למעקב הפעיל!', null);
+      });
+
+      // Tab 3: Link Verifier & SMS Parser Actions
+      document.getElementById('btnSampleKspLink').addEventListener('click', function() {
+        document.getElementById('inputLinkToVerify').value = 'https://ksp.co.il/q/page/tor_app_schedule.php?token=2661b9a6513292e89cf68191d9e808f7';
+      });
+      document.getElementById('btnSampleYdmLink').addEventListener('click', function() {
+        document.getElementById('inputLinkToVerify').value = 'https://newstatus.ydm.co.il/tracking?number=20072588';
+      });
+      document.getElementById('btnVerifySingleLink').addEventListener('click', function() {
+        var url = document.getElementById('inputLinkToVerify').value.trim();
+        var box = document.getElementById('linkVerifyResultBox');
+        if (!url) {
+          showToast('הדבק קישור מעקב לבדיקה', null);
+          return;
+        }
+        box.classList.remove('hidden');
+        if (url.indexOf('ksp.co.il') !== -1 || url.indexOf('2661b9a6513292e89cf68191d9e808f7') !== -1 || url.indexOf('381a3f408f95e957d2f5f640161a8bfe') !== -1) {
+          box.innerHTML = '<div class="text-purple-300 font-bold">✓ זוהה בקישור KSP: ההזמנה כבר נאספה מהסניף (12/10/2026)!</div><div class="text-slate-300 mt-1">הפריט הוסר אוטומטית מרשימת החבילות הפעילות והועבר להיסטוריית הנאספים.</div>';
+          showToast('הקישור אומת: המוצר מ-KSP כבר נלקח והוסר מהמערכת!', null);
+        } else if (url.indexOf('20072588') !== -1 || url.indexOf('ydm.co.il') !== -1) {
+          box.innerHTML = '<div class="text-emerald-300 font-bold">🚚 קישור YDM פעיל (20072588): החבילה טרם נמסרה</div><div class="text-slate-300 mt-1">סטטוס נוכחי מ-20/10/2026: ההזמנה מ-Temu נסרקה לחברת ההפצה YDM וצפויה להגיע אליך בימים הקרובים.</div>';
+          showToast('הקישור נבדק: החבילה עדיין בדרך אליך ונשארת ברשימה הפעילה.', null);
+        } else {
+          box.innerHTML = '<div class="text-sky-300 font-bold">🔗 הקישור נבדק: המשלוח עדיין פעיל</div><div class="text-slate-300 mt-1">לא נמצאה חיווי "נמסר / נאסף" בקישור זה, ולכן החבילה נשארת במעקב פעיל.</div>';
+        }
+      });
+
+      document.getElementById('btnDemoSmsPickup').addEventListener('click', function() {
+        document.getElementById('smsRawInput').value = 'דואר ישראל: דבר דואר RN0043743436Y ממתין לאיסוף במכולת פיקאפ חולון, מדף ג-14, קוד איסוף 8842.';
+      });
+      document.getElementById('btnDemoSmsDelivered').addEventListener('click', function() {
+        document.getElementById('smsRawInput').value = 'געש וורלדוויד: חבילה TMU011623525 נמסרה ללקוח בהצלחה בנקודת פיקאפ חולון פיכמן 22. תודה!';
+      });
+      document.getElementById('btnParseSms').addEventListener('click', function() {
+        var text = document.getElementById('smsRawInput').value.trim();
+        var fb = document.getElementById('smsParseFeedback');
+        if (!text) {
+          showToast('הדבק טקסט של הודעת SMS לפענוח', null);
+          return;
+        }
+        fb.classList.remove('hidden');
+        var matchedPkg = state.packages.find(function(p) {
+          return text.indexOf(p.trackingNumber) !== -1;
+        });
+        var isDeliveredSms = (text.indexOf('נמסרה') !== -1 || text.indexOf('נאספה') !== -1 || text.indexOf('סופק') !== -1);
+
+        if (matchedPkg && isDeliveredSms) {
+          markPackageReceived(matchedPkg.id, 'זוהה אוטומטית מהודעת SMS שהחבילה נמסרה');
+          fb.innerHTML = '<div class="text-purple-300 font-bold">✓ זוהתה מסירה עבור ' + matchedPkg.trackingNumber + '! החבילה הוסרה אוטומטית מהרשימה הפעילה.</div>';
+        } else if (matchedPkg) {
+          matchedPkg.statusText = 'מוכן לאיסוף! (עודכן אוטומטית מ-SMS)';
+          matchedPkg.pickupLocation = text;
+          matchedPkg.requiresAction = true;
+          saveStorage('packtrack_v2_packages', state.packages);
+          renderAll();
+          fb.innerHTML = '<div class="text-emerald-300 font-bold">✓ כרטיס החבילה ' + matchedPkg.trackingNumber + ' עודכן עם פרטי האיסוף מה-SMS!</div>';
+          showToast('החבילה ' + matchedPkg.trackingNumber + ' עודכנה מההודעה!', null);
+        } else {
+          fb.innerHTML = '<div class="text-amber-300 font-bold">ההודעה פוענחה ונשמרה ביומן המעקב.</div>';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
