@@ -21,26 +21,96 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses || true
-
-      - name: Build Android APK from Standalone App
+      - name: Compile Signed Android APK Directly
         run: |
-          npm install -g cordova
-          cordova create packtrack com.packtrack.il "PackTrack IL"
-          cp packtrack_il_v2_standalone.html packtrack/www/index.html
-          cd packtrack
-          cordova platform add android
-          cordova build android --debug
-          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk ../PackTrack-IL-v2.0.apk
+          SDK_DIR="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          BUILD_TOOLS=$(ls -d "$SDK_DIR/build-tools/"* | sort -V | tail -n 1)
+          PLATFORM=$(ls -d "$SDK_DIR/platforms/android-"* | sort -V | tail -n 1)
+          ANDROID_JAR="$PLATFORM/android.jar"
+
+          mkdir -p build_apk/src/com/packtrack/il build_apk/assets build_apk/obj
+
+          HTML_FILE=$(ls *.html 2>/dev/null | head -n 1 || true)
+          if [ -n "$HTML_FILE" ]; then
+            cp "$HTML_FILE" build_apk/assets/index.html
+          else
+            echo "<!DOCTYPE html><html dir='rtl'><body><h2>PackTrack IL</h2></body></html>" > build_apk/assets/index.html
+          fi
+
+          cat << 'EOF' > build_apk/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.packtrack.il"
+              android:versionCode="2"
+              android:versionName="2.0.0">
+              <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="30" />
+              <uses-permission android:name="android.permission.INTERNET" />
+              <application
+                  android:label="PackTrack IL"
+                  android:usesCleartextTraffic="true"
+                  android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:configChanges="orientation|screenSize|keyboardHidden">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat << 'EOF' > build_apk/src/com/packtrack/il/MainActivity.java
+          package com.packtrack.il;
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  webView = new WebView(this);
+                  WebSettings s = webView.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setAllowFileAccess(true);
+                  s.setAllowContentAccess(true);
+                  webView.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
+                          String url = req.getUrl().toString();
+                          if (url.startsWith("file://")) return false;
+                          startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                          return true;
+                      }
+                  });
+                  setContentView(webView);
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) webView.goBack();
+                  else super.onBackPressed();
+              }
+          }
+          EOF
+
+          javac -source 1.8 -target 1.8 -classpath "$ANDROID_JAR" -d build_apk/obj build_apk/src/com/packtrack/il/MainActivity.java
+          "$BUILD_TOOLS/d8" --lib "$ANDROID_JAR" --output build_apk/ build_apk/obj/com/packtrack/il/*.class
+          "$BUILD_TOOLS/aapt" package -f -M build_apk/AndroidManifest.xml -A build_apk/assets -I "$ANDROID_JAR" -F build_apk/unaligned.apk
+          cd build_apk && "$BUILD_TOOLS/aapt" add unaligned.apk classes.dex && cd ..
+          "$BUILD_TOOLS/zipalign" -f 4 build_apk/unaligned.apk build_apk/aligned.apk
+          keytool -genkeypair -v -keystore build_apk/release.keystore -storepass packtrack123 -alias packtrack -keypass packtrack123 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=PackTrackIL,O=PackTrack,C=IL"
+          "$BUILD_TOOLS/apksigner" sign --ks build_apk/release.keystore --ks-pass pass:packtrack123 --key-pass pass:packtrack123 --out PackTrack-IL-v2.0.apk build_apk/aligned.apk
 
       - name: Upload APK to Actions Tab
         uses: actions/upload-artifact@v4
