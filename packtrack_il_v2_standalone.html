@@ -62,7 +62,7 @@
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-lg sm:text-xl font-black tracking-tight text-white">PackTrack IL</h1>
-            <span id="appVersionBadge" class="px-2.5 py-0.5 text-xs font-extrabold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">v3.0.0</span>
+            <span id="appVersionBadge" class="px-2.5 py-0.5 text-xs font-extrabold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">v3.1.0</span>
             <button id="btnQuickFontToggle" type="button" class="px-2 py-0.5 text-xs font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition" title="הגדל טקסט ונגישות">
               נגישות A+
             </button>
@@ -175,7 +175,7 @@
   <section id="sectionKpiCards" class="max-w-5xl mx-auto px-3 sm:px-4 pt-3 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
     <div id="kpiCardActiveBtn" class="glass-card rounded-2xl p-3 border-r-4 border-r-emerald-500 cursor-pointer hover:border-slate-500 transition">
       <div class="text-xs text-slate-400">חבילות ומשלוחים פעילים</div>
-      <div class="text-2xl font-black text-white mt-0.5" id="kpiActiveCount">8</div>
+      <div class="text-2xl font-black text-white mt-0.5" id="kpiActiveCount">10</div>
       <div class="text-[11px] text-emerald-400 mt-0.5">כולל תמונות ופירוט מלא</div>
     </div>
     <div id="kpiCardAllItemsBtn" class="glass-card rounded-2xl p-3 border-r-4 border-r-amber-500 cursor-pointer hover:border-slate-500 transition">
@@ -202,7 +202,7 @@
       <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
         <button id="tabBtnActive" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-emerald-600 text-white transition flex items-center gap-1.5 shrink-0">
           <span>🏠 מסך בית (חבילות)</span>
-          <span id="badgeTabActive" class="px-1.5 py-0.2 rounded-full text-xs bg-black/25">8</span>
+          <span id="badgeTabActive" class="px-1.5 py-0.2 rounded-full text-xs bg-black/25">10</span>
         </button>
         <button id="tabBtnAllProducts" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-800 text-slate-200 hover:bg-slate-700 transition flex items-center gap-1.5 shrink-0">
           <span>🛍️ כל 33 מוצרי AliExpress</span>
@@ -419,6 +419,20 @@
               <input id="settingUserPhone" type="text" value="054-8862236" class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs" placeholder="טלפון נייד" />
               <input id="settingUserAddress" type="text" value="הופיין 59 דירה 303, חולון" class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs" placeholder="כתובת מגורים" />
             </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/45 space-y-2">
+            <div class="font-extrabold text-amber-300">⚡ עדכון ישיר מ-GitHub (ללא מחיקה וללא הורדת APK!)</div>
+            <p class="text-xs text-slate-300">
+              האפליקציה יכולה למשוך ישירות את הקובץ העדכני מהמאגר שלך ב-GitHub (<code>yitzhaki173-lab</code>) ולעדכן את עצמה במקום:
+            </p>
+            <div class="flex gap-1.5">
+              <input id="settingGithubRepo" type="text" value="yitzhaki173-lab/packtrack-il" class="flex-1 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs font-mono" placeholder="username/repo" />
+              <button id="btnLiveGithubOta" type="button" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shrink-0 transition">
+                ⚡ עדכן עכשיו מ-GitHub
+              </button>
+            </div>
+            <div id="otaStatusMsg" class="text-[11px] text-amber-200 hidden"></div>
           </div>
 
           <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 space-y-2">
@@ -705,8 +719,8 @@
       { id: 'ae-19', ref: '1123404630569108', date: '12/10/2026', store: 'Cityking Store', heName: '50 יח׳ רכיבי אופטוקופלר PC817 / EL817 DIP-4', enName: '50PCS PC817 EL817 817C DIP-4 Optocoupler', price: '₪14.93', img: AE_ITEM_IMGS.item19, pkgId: 'pkg-postil-rn0043643276y' },
       { id: 'ae-20', ref: '1123404630589108', date: '12/10/2026', store: 'Bfanyin XX1 Store', heName: 'קופסת אחסון ותצוגה מעור אקולוגי למשקפי שמש DELESYS (שחור)', enName: 'DELESYS Multi-Functional Large Capacity Eco-Leather Sunglass Box', price: '₪77.06', img: AE_ITEM_IMGS.item20, pkgId: 'pkg-postil-rn0043643276y' },
       { id: 'ae-21', ref: '1123404630609108', date: '12/10/2026', store: 'LXQY Store Store', heName: 'סט 300 נגדים 1% 1/4W Metal Film בקופסת חלוקה', enName: '300pcs 1% Resistor Set Resistance 1/4W Metal Film with Box', price: '₪11.34', img: AE_ITEM_IMGS.item21, pkgId: 'pkg-postil-rn0043643276y' },
-      { id: 'ae-22', ref: '1123151449009100', date: '09/10/2026', store: 'Choice Tools Store', heName: 'מסור שרשרת חשמלי נטען 8 אינץ׳ בראשלס YOFIDRA 3500W במזוודה (גוף בלבד)', enName: 'YOFIDRA 8 Inch Brushless Electric Chainsaw 3500W Cordless (No Battery)', price: '$66.49', img: AE_ITEM_IMGS.item22, pkgId: 'pkg-ae-tools-batteries' },
-      { id: 'ae-23', ref: '1123151449009108', date: '09/10/2026', store: 'Shop1105399295 Store', heName: 'זוג סוללות ליתיום 18V 5.0Ah תואמות מקיטה + מטען (2PCS + Charger)', enName: 'Makita-Compatible 18V Rechargeable Battery 2PCS-5.0Ah + Charger', price: '₪228.90', img: AE_ITEM_IMGS.item23, pkgId: 'pkg-ae-tools-batteries' },
+      { id: 'ae-22', ref: '1123151449009100', date: '09/10/2026', store: 'Choice Tools Store', heName: 'מסור שרשרת חשמלי נטען 8 אינץ׳ בראשלס YOFIDRA 3500W במזוודה (גוף בלבד)', enName: 'YOFIDRA 8 Inch Brushless Electric Chainsaw 3500W Cordless (No Battery)', price: '$66.49', img: AE_ITEM_IMGS.item22, pkgId: 'pkg-ae-yofidra-chainsaw' },
+      { id: 'ae-23', ref: '1123151449009108', date: '09/10/2026', store: 'Shop1105399295 Store', heName: 'זוג סוללות ליתיום 18V 5.0Ah תואמות מקיטה + מטען (2PCS + Charger)', enName: 'Makita-Compatible 18V Rechargeable Battery 2PCS-5.0Ah + Charger', price: '₪228.90', img: AE_ITEM_IMGS.item23, pkgId: 'pkg-ae-makita-batteries' },
       { id: 'ae-24', ref: '1123151921519108', date: '09/10/2026', store: 'Shetrry Store', heName: 'מאריך גמיש ממתכת לביטים למברגה 200 מ״מ כסוף (בחבילה RN0043743436Y)', enName: '200mm Hexagonal Shank Metal Flex Extension Rod Bit Holder', price: '₪11.11', img: AE_ITEM_IMGS.item24, pkgId: 'pkg-postil-rn0043743436y' },
       { id: 'ae-25', ref: '1123151921539108', date: '09/10/2026', store: 'Shop1105327505 Store', heName: 'מברגת אימפקט בראשלס Makita DTD173 180Nm 18V גוף בלבד (בחבילה RN0043743436Y)', enName: 'Makita DTD173 1800RPM 180Nm Cordless Impact Driver (No Battery)', price: '₪131.09', img: AE_ITEM_IMGS.item25, pkgId: 'pkg-postil-rn0043743436y' },
       { id: 'ae-26', ref: '1123151921559108', date: '09/10/2026', store: 'Shop19271234220 Store', heName: 'תפס מגנטי חזק לביטים Makita E-03442 (בחבילה RN0043743436Y)', enName: 'Makita E-03442 PH2 Sleeve Strong Magnetic Bit Holder', price: '₪18.32', img: AE_ITEM_IMGS.item26, pkgId: 'pkg-postil-rn0043743436y' },
@@ -716,7 +730,7 @@
       { id: 'ae-30', ref: '1123204530599108', date: '05/10/2026', store: 'Shop1105344365 Store', heName: 'מקדחה/מברגה בראשלס Makita DDF487 18V גוף בלבד', enName: 'Makita DDF487 Cordless Driver Drill Brushless (Only Tool)', price: '$32.51', img: AE_ITEM_IMGS.item30, pkgId: 'pkg-postil-rs001214914s1' },
       { id: 'ae-31', ref: '1123204530659108', date: '05/10/2026', store: 'Multi-functional Tool Store', heName: 'סט 43 ביטים ובוקסות מקצועי Makita B-55697 בקופסה', enName: 'Makita B-55697 Electric Screwdriver Bits Set 43Pcs Colour Coded', price: '$29.40', img: AE_ITEM_IMGS.item31, pkgId: 'pkg-postil-rs001214914s1' },
       { id: 'ae-32', ref: '1123204530619108', date: '05/10/2026', store: 'DXN 3C Dropshipping Store', heName: 'גליל דבק דו-צדדי שקוף רב-פעמי רחיץ (3 ס״מ × 3 מטר)', enName: 'Transparent Seamless Double-sided Tape Washable Reusable 3cm x 3M', price: '$3.64', img: AE_ITEM_IMGS.item32, pkgId: 'pkg-postil-rs001214914s1' },
-      { id: 'ae-33', ref: '1123122672529108', date: '01/10/2026', store: 'ONEVAN Official Store', heName: 'מסור שרשרת טלסקופי בראשלס 2 ב-1 לגיזום ענפים גבוהים ONEVAN (ללא סוללה)', enName: 'ONEVAN Brushless Electric Telescoping Pole Saw 2IN1 High Branch Chainsaw', price: '$94.08', img: AE_ITEM_IMGS.item33, pkgId: 'pkg-ae-tools-batteries' }
+      { id: 'ae-33', ref: '1123122672529108', date: '01/10/2026', store: 'ONEVAN Official Store', heName: 'מסור שרשרת טלסקופי בראשלס 2 ב-1 לגיזום ענפים גבוהים ONEVAN (ללא סוללה)', enName: 'ONEVAN Brushless Electric Telescoping Pole Saw 2IN1 High Branch Chainsaw', price: '$94.08', img: AE_ITEM_IMGS.item33, pkgId: 'pkg-ae-onevan-polesaw' }
     ];
 
     var INITIAL_PACKAGES_V3 = [
@@ -913,30 +927,84 @@
         collected: false
       },
       {
-        id: 'pkg-ae-tools-batteries',
-        store: 'AliExpress Special Line (כלים וסוללות)',
+        id: 'pkg-ae-onevan-polesaw',
+        store: 'AliExpress • ONEVAN Official Store (הזמנת 01/10)',
         courierGroup: 'AliExpress',
-        title: 'מסור טלסקופי ONEVAN, מסור שרשרת YOFIDRA וזוג סוללות 18V + מטען (3 הזמנות)',
+        title: 'מסור שרשרת טלסקופי בראשלס 2 ב-1 לגיזום ענפים גבוהים ONEVAN ($94.08)',
         trackingNumber: '1123122672529108',
-        orderId: '1123151449009108',
-        statusText: 'בדרך לישראל במשלוח ייעודי לסוללות וכלים ארוכים (Awaiting delivery)',
+        orderId: '1123122672529108',
+        statusText: 'הזמנה נפרדת מ-01/10/2026 • בדרך לישראל במשלוח מיוחד לכלים ארוכים (Awaiting delivery)',
         pickupLocation: 'משלוח שליח / נקודת חלוקה חולון',
-        pickupCode: 'הזמנות 01/10 ו-09/10',
-        updatedDate: '09/10/2026',
-        sortTimestamp: 1791550000,
+        pickupCode: 'הזמנה 1123122672529108',
+        updatedDate: '01/10/2026',
+        sortTimestamp: 1791550300,
         trackingUrl: 'https://www.aliexpress.com/p/order/index.html',
         storeOrderUrl: 'https://www.aliexpress.com/p/order/index.html',
         emailUrl: '',
-        linkCheckResult: 'במעקב פעיל ב-AliExpress (Awaiting delivery)',
-        productImage: AE_BUNDLE_IMGS.b7,
-        fallbackImage: AE_BUNDLE_IMGS.b7,
+        linkCheckResult: 'הזמנה עצמאית פעילה ב-AliExpress (Awaiting delivery)',
+        productImage: AE_ITEM_IMGS.item33,
+        fallbackImage: AE_ITEM_IMGS.item33,
         orderSheetImage: AE_BUNDLE_IMGS.b7,
-        whatOrderedSummary: '3 הזמנות כלי עבודה וסוללות ליתיום 18V שנשלחות בקו משלוח ייעודי:',
-        subProductIds: ['ae-33', 'ae-22', 'ae-23'],
+        whatOrderedSummary: 'הזמנה נפרדת מתאריך 01/10/2026 מחנות ONEVAN Official Store (לא שייכת להזמנות ה-09/10):',
+        subProductIds: ['ae-33'],
         itemsList: [
-          '1. מסור שרשרת טלסקופי בראשלס 2 ב-1 לגיזום ענפים גבוהים ONEVAN ($94.08 • 01/10 • 1123122672529108)',
-          '2. מסור שרשרת חשמלי נטען 8 אינץ׳ בראשלס YOFIDRA 3500W במזוודה ($66.49 • 09/10)',
-          '3. זוג סוללות 18V 5.0Ah תואמות מקיטה + מטען (228.90 ₪ • 09/10 • 1123151449009108)'
+          '1x מסור שרשרת טלסקופי בראשלס 2 ב-1 לגיזום ענפים גבוהים ONEVAN ללא סוללה ($94.08 • הזמנה 1123122672529108)'
+        ],
+        requiresAction: false,
+        pinned: false,
+        collected: false
+      },
+      {
+        id: 'pkg-ae-yofidra-chainsaw',
+        store: 'AliExpress • Choice Tools Store (הזמנת 09/10)',
+        courierGroup: 'AliExpress',
+        title: 'מסור שרשרת חשמלי נטען 8 אינץ׳ בראשלס YOFIDRA 3500W במזוודה ($66.49)',
+        trackingNumber: '1123151449009100',
+        orderId: '1123151449009100',
+        statusText: 'הזמנה נפרדת מ-09/10/2026 • בדרך לישראל (Awaiting delivery)',
+        pickupLocation: 'נקודת חלוקה / דואר ישראל חולון',
+        pickupCode: 'הזמנה 1123151449009100',
+        updatedDate: '09/10/2026',
+        sortTimestamp: 1791550200,
+        trackingUrl: 'https://www.aliexpress.com/p/order/index.html',
+        storeOrderUrl: 'https://www.aliexpress.com/p/order/index.html',
+        emailUrl: '',
+        linkCheckResult: 'הזמנה עצמאית פעילה ב-AliExpress (Awaiting delivery)',
+        productImage: AE_ITEM_IMGS.item22,
+        fallbackImage: AE_ITEM_IMGS.item22,
+        orderSheetImage: AE_BUNDLE_IMGS.b5,
+        whatOrderedSummary: 'הזמנה נפרדת מתאריך 09/10/2026 מחנות Choice Tools Store (במזוודה קשיחה, גוף בלבד):',
+        subProductIds: ['ae-22'],
+        itemsList: [
+          '1x מסור שרשרת חשמלי נטען 8 אינץ׳ בראשלס YOFIDRA 3500W במזוודה ללא סוללה ($66.49 • הזמנה 1123151449009100)'
+        ],
+        requiresAction: false,
+        pinned: false,
+        collected: false
+      },
+      {
+        id: 'pkg-ae-makita-batteries',
+        store: 'AliExpress • משלוח סוללות ליתיום (הזמנת 09/10)',
+        courierGroup: 'AliExpress',
+        title: 'זוג סוללות ליתיום 18V 5.0Ah תואמות מקיטה + מטען (228.90 ₪)',
+        trackingNumber: '1123151449009108',
+        orderId: '1123151449009108',
+        statusText: 'הזמנה נפרדת מ-09/10/2026 • משלוח ייעודי לסוללות ליתיום (Awaiting delivery)',
+        pickupLocation: 'משלוח שליח / נקודת איסוף חולון',
+        pickupCode: 'הזמנה 1123151449009108',
+        updatedDate: '09/10/2026',
+        sortTimestamp: 1791550100,
+        trackingUrl: 'https://www.aliexpress.com/p/order/index.html',
+        storeOrderUrl: 'https://www.aliexpress.com/p/order/index.html',
+        emailUrl: '',
+        linkCheckResult: 'הזמנה עצמאית פעילה ב-AliExpress (Awaiting delivery)',
+        productImage: AE_ITEM_IMGS.item23,
+        fallbackImage: AE_ITEM_IMGS.item23,
+        orderSheetImage: AE_BUNDLE_IMGS.b5,
+        whatOrderedSummary: 'הזמנה נפרדת מתאריך 09/10/2026 (סוללות ליתיום נשלחות תמיד בחבילה נפרדת מכלי עבודה מטעמי בטיחות טיסה):',
+        subProductIds: ['ae-23'],
+        itemsList: [
+          '1x זוג סוללות 18V 5.0Ah תואמות מקיטה + מטען 2PCS-5.0Ah Charger (228.90 ₪ • הזמנה 1123151449009108)'
         ],
         requiresAction: false,
         pinned: false,
@@ -1154,11 +1222,11 @@
     ];
 
     function loadSyncedPackagesV3() {
-      var savedV3 = loadStorage('packtrack_v3_0_packages', null);
+      var savedV3 = loadStorage('packtrack_v3_1_packages', null);
       if (savedV3 && Array.isArray(savedV3) && savedV3.length > 0) {
         return savedV3;
       }
-      saveStorage('packtrack_v3_0_packages', INITIAL_PACKAGES_V3);
+      saveStorage('packtrack_v3_1_packages', INITIAL_PACKAGES_V3);
       return JSON.parse(JSON.stringify(INITIAL_PACKAGES_V3));
     }
 
@@ -1287,7 +1355,7 @@
       var pkg = state.packages.find(function(p) { return p.id === pkgId; });
       if (!pkg) return;
       pkg.pinned = !pkg.pinned;
-      saveStorage('packtrack_v3_0_packages', state.packages);
+      saveStorage('packtrack_v3_1_packages', state.packages);
       renderAll();
       showToast(pkg.pinned ? '📌 החבילה הוצמדה לראש מסך הבית!' : 'ההצמדה בוטלה', null);
     }
@@ -1318,9 +1386,54 @@
       var temp = state.packages[idxA];
       state.packages[idxA] = state.packages[idxB];
       state.packages[idxB] = temp;
-      saveStorage('packtrack_v3_0_packages', state.packages);
+      saveStorage('packtrack_v3_1_packages', state.packages);
       renderAll();
       showToast(direction === 'UP' ? '⬆️ הכרטיס הוזז למעלה' : '⬇️ הכרטיס הוזז למטה', null);
+    }
+
+    function splitPackageIntoIndividualOrders(pkgId) {
+      var idx = state.packages.findIndex(function(p) { return p.id === pkgId; });
+      if (idx === -1) return;
+      var pkg = state.packages[idx];
+      if (!pkg.subProductIds || pkg.subProductIds.length <= 1) return;
+      var subMap = getSubProductMap();
+      var newCards = [];
+      pkg.subProductIds.forEach(function(sid, i) {
+        var it = subMap[sid];
+        if (!it) return;
+        newCards.push({
+          id: pkg.id + '-split-' + sid,
+          store: 'AliExpress • ' + it.store + ' (' + it.date + ')',
+          courierGroup: pkg.courierGroup,
+          title: it.heName + ' (' + it.price + ')',
+          trackingNumber: pkg.trackingNumber.indexOf('RN') === 0 || pkg.trackingNumber.indexOf('RS') === 0 ? pkg.trackingNumber : it.ref,
+          orderId: it.ref,
+          statusText: pkg.statusText,
+          pickupLocation: pkg.pickupLocation,
+          pickupCode: 'הזמנה ' + it.ref,
+          updatedDate: it.date,
+          sortTimestamp: (pkg.sortTimestamp || 1791550000) - i,
+          trackingUrl: pkg.trackingUrl,
+          storeOrderUrl: pkg.storeOrderUrl,
+          emailUrl: pkg.emailUrl,
+          linkCheckResult: pkg.linkCheckResult,
+          productImage: it.img,
+          fallbackImage: it.img,
+          orderSheetImage: pkg.orderSheetImage || it.img,
+          whatOrderedSummary: 'הזמנה מס׳ ' + it.ref + ' מתאריך ' + it.date + ' (' + it.store + '):',
+          subProductIds: [sid],
+          itemsList: ['1x ' + it.heName + ' (' + it.price + ' • הזמנה ' + it.ref + ')'],
+          requiresAction: pkg.requiresAction,
+          pinned: pkg.pinned,
+          collected: false
+        });
+      });
+      if (newCards.length > 0) {
+        Array.prototype.splice.apply(state.packages, [idx, 1].concat(newCards));
+        saveStorage('packtrack_v3_1_packages', state.packages);
+        renderAll();
+        showToast('✂️ החבילה פוצלה ל-' + newCards.length + ' כרטיסי הזמנה נפרדים!', null);
+      }
     }
 
     function markPackageReceived(pkgId, reasonText) {
@@ -1329,14 +1442,14 @@
       var pkg = state.packages[idx];
       if (state.settings.autoDeleteOnReceive) {
         state.packages.splice(idx, 1);
-        saveStorage('packtrack_v3_0_packages', state.packages);
+        saveStorage('packtrack_v3_1_packages', state.packages);
         renderAll();
         showToast('החבילה "' + pkg.title + '" נמחקה לצמיתות.', null);
       } else {
         pkg.collected = true;
         pkg.requiresAction = false;
         pkg.statusText = '✅ נאסף / התקבל (' + (reasonText || 'סומן ב"קיבלתי"') + ')';
-        saveStorage('packtrack_v3_0_packages', state.packages);
+        saveStorage('packtrack_v3_1_packages', state.packages);
         renderAll();
         showToast('החבילה הועברה ללשונית "נמסרו / נאספו"', pkg.id);
       }
@@ -1346,7 +1459,7 @@
       var pkg = state.packages.find(function(p) { return p.id === pkgId; });
       if (!pkg) return;
       pkg.collected = false;
-      saveStorage('packtrack_v3_0_packages', state.packages);
+      saveStorage('packtrack_v3_1_packages', state.packages);
       renderAll();
       showToast('החבילה הוחזרה למסך הבית!', null);
     }
@@ -1355,7 +1468,7 @@
       var idx = state.packages.findIndex(function(p) { return p.id === pkgId; });
       if (idx === -1) return;
       state.packages.splice(idx, 1);
-      saveStorage('packtrack_v3_0_packages', state.packages);
+      saveStorage('packtrack_v3_1_packages', state.packages);
       renderAll();
       showToast('החבילה נמחקה לצמיתות', null);
     }
@@ -1512,10 +1625,14 @@
       if (state.settings.showItemsExpanded && layoutMode === 'FULL') {
         if (pkg.subProductIds && pkg.subProductIds.length > 0) {
           html += '<div class="mt-2.5 p-2.5 rounded-2xl bg-indigo-950/35 border border-indigo-500/30">';
-          html += '<div class="flex items-center justify-between mb-2">';
-          html += '<span class="text-xs font-black text-indigo-200">🛍️ המוצרים בחבילה זו (' + pkg.subProductIds.length + ' פריטים עם תמונות):</span>';
-          html += '<button type="button" data-action="zoom-img" data-id="' + pkg.id + '" class="text-[11px] font-bold text-amber-300 underline">הגדל הכל</button>';
-          html += '</div>';
+          html += '<div class="flex items-center justify-between gap-1.5 flex-wrap mb-2">';
+          html += '<span class="text-xs font-black text-indigo-200">' + (pkg.subProductIds.length > 1 ? '🛍️ המוצרים בחבילה זו (' + pkg.subProductIds.length + ' פריטים):' : '🛍️ פרטי המוצר והזמנה:') + '</span>';
+          html += '<div class="flex items-center gap-1.5">';
+          if (pkg.subProductIds.length > 1 && !isCollected) {
+            html += '<button type="button" data-action="split-pkg" data-id="' + pkg.id + '" class="px-2 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-400/30 text-[11px] font-extrabold transition" title="פצל כל מוצר לכרטיס הזמנה נפרד במסך הבית">✂️ פצל להזמנות נפרדות</button>';
+          }
+          html += '<button type="button" data-action="zoom-img" data-id="' + pkg.id + '" class="text-[11px] font-bold text-amber-300 underline">הגדל</button>';
+          html += '</div></div>';
           html += '<div class="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto pr-0.5">';
           pkg.subProductIds.forEach(function(sid) {
             var it = subMap[sid];
@@ -1766,7 +1883,7 @@
           }
         }
       });
-      saveStorage('packtrack_v3_0_packages', state.packages);
+      saveStorage('packtrack_v3_1_packages', state.packages);
 
       setTimeout(function() {
         icon.classList.remove('spin-slow');
@@ -1806,6 +1923,8 @@
           movePackageOrder(id, 'UP');
         } else if (action === 'move-down') {
           movePackageOrder(id, 'DOWN');
+        } else if (action === 'split-pkg') {
+          splitPackageIntoIndividualOrders(id);
         } else if (action === 'toggle-ali-item') {
           var itemId = el.getAttribute('data-item-id');
           var item = state.aliItems.find(function(x) { return x.id === itemId; });
@@ -1875,7 +1994,7 @@
         state.packages = JSON.parse(JSON.stringify(INITIAL_PACKAGES_V3));
         state.aliItems = JSON.parse(JSON.stringify(ALL_33_ALI_ITEMS));
         state.settings.sortOrder = 'CUSTOM';
-        saveStorage('packtrack_v3_0_packages', state.packages);
+        saveStorage('packtrack_v3_1_packages', state.packages);
         saveStorage('packtrack_v3_0_ali_items', state.aliItems);
         saveSettings();
         showToast('כל הנתונים, התמונות והסדר אופסו לגרסה v3.0!', null);
@@ -1883,6 +2002,37 @@
       document.getElementById('btnResetHomeOrder').addEventListener('click', resetHomeOrderNow);
       document.getElementById('btnResetCardOrdering').addEventListener('click', resetHomeOrderNow);
       document.getElementById('btnForceResetToV3').addEventListener('click', resetHomeOrderNow);
+      var btnOta = document.getElementById('btnLiveGithubOta');
+      if (btnOta) {
+        var savedRepo = loadStorage('packtrack_github_repo', 'yitzhaki173-lab/packtrack-il');
+        document.getElementById('settingGithubRepo').value = savedRepo;
+        btnOta.addEventListener('click', function() {
+          var repo = document.getElementById('settingGithubRepo').value.trim() || 'yitzhaki173-lab/packtrack-il';
+          saveStorage('packtrack_github_repo', repo);
+          var msg = document.getElementById('otaStatusMsg');
+          msg.classList.remove('hidden');
+          msg.textContent = 'מתחבר אל GitHub (' + repo + ')...';
+          var rawUrl = 'https://raw.githubusercontent.com/' + repo + '/main/packtrack_il_v2_standalone.html?t=' + Date.now();
+          fetch(rawUrl).then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.text();
+          }).then(function(newHtml) {
+            if (newHtml && newHtml.indexOf('<!DOCTYPE html>') !== -1) {
+              msg.textContent = '✓ נמצאה גרסה חדשה ב-GitHub! טוען ומעדכן...';
+              showToast('⚡ הגרסה החדשה נטענה מ-GitHub בהצלחה!', null);
+              setTimeout(function() {
+                document.open();
+                document.write(newHtml);
+                document.close();
+              }, 500);
+            } else {
+              msg.textContent = 'הקובץ ב-GitHub נמצא אך אינו תקין.';
+            }
+          }).catch(function(err) {
+            msg.textContent = 'לא ניתן למשוך מ-' + repo + ' (ודא ששם המאגר נכון וש-Repository מוגדר Public).';
+          });
+        });
+      }
 
       document.getElementById('settingShowItemsExpanded').addEventListener('change', function(e) {
         state.settings.showItemsExpanded = !!e.target.checked;
@@ -2011,7 +2161,7 @@
           pkg.productImage = state.pendingUploadedDataUrl;
           pkg.customImage = state.pendingUploadedDataUrl;
         }
-        saveStorage('packtrack_v3_0_packages', state.packages);
+        saveStorage('packtrack_v3_1_packages', state.packages);
         var m = document.getElementById('modalEditDetails');
         m.classList.add('hidden');
         m.classList.remove('flex');
@@ -2028,7 +2178,7 @@
 
       document.getElementById('btnClearAllCollected').addEventListener('click', function() {
         state.packages = state.packages.filter(function(p) { return !p.collected; });
-        saveStorage('packtrack_v3_0_packages', state.packages);
+        saveStorage('packtrack_v3_1_packages', state.packages);
         renderAll();
         showToast('היסטוריית החבילות שנמסרו נוקתה', null);
       });
@@ -2079,7 +2229,7 @@
           collected: false
         };
         state.packages.unshift(newPkg);
-        saveStorage('packtrack_v3_0_packages', state.packages);
+        saveStorage('packtrack_v3_1_packages', state.packages);
         document.getElementById('pkgInputTitle').value = '';
         document.getElementById('pkgInputStore').value = '';
         document.getElementById('pkgInputTracking').value = '';
@@ -2140,7 +2290,7 @@
           matchedPkg.pickupLocation = text;
           matchedPkg.requiresAction = true;
           matchedPkg.pinned = true;
-          saveStorage('packtrack_v3_0_packages', state.packages);
+          saveStorage('packtrack_v3_1_packages', state.packages);
           renderAll();
           fb.innerHTML = '<div class="text-emerald-300 font-bold">✓ החבילה ' + matchedPkg.trackingNumber + ' עודכנה והוצמדה לראש מסך הבית!</div>';
         } else {
